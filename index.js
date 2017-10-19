@@ -32,7 +32,7 @@ if(pat)
 		else{
 			//watchDir(pat)
             create_summary(pat);
-
+            make_dir(pat);
 		}
     })
 }
@@ -50,6 +50,15 @@ function get_last_part(pat)
 {
     let last_part=path.basename(pat);
     return last_part;
+}
+
+function make_dir(pat)
+{
+    let dir_for_make=pat+'\\'+get_last_part(pat);
+    fs.mkdir(dir_for_make, function(err)
+    {
+        if(err) console.log("Ошибка при создании директория.");
+    });
 }
 
 //let content=fs.readFile(`${path}`,"utf8",function(error, data)
