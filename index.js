@@ -3,7 +3,7 @@ const path=require('path');
 let pat= process.argv[2];
 let copyright;
 
-copyright=JSON.parse(fs.readFileSync("./cop.json"));
+copyright=JSON.parse(fs.readFileSync("./cop.json")).cop;
 
 let script='const fs = require(\'fs\');\n' +
     'const path = require(\'path\');\n' +
@@ -30,9 +30,9 @@ if(pat)
 	fs.stat(pat,function (error, statistics) {
 		if(error){console.log('Ошибка пути');}
 		else{
-			//watchDir(pat)
-            create_summary(pat);
-            make_dir(pat);
+		    create_summary(pat);
+		    make_dir(pat);
+		    watchDir(pat);
 		}
     })
 }
@@ -46,23 +46,57 @@ function create_summary(pat)
     );
 }
 
-function get_last_part(pat)
-{
-    let last_part=path.basename(pat);
-    return last_part;
-}
-
 function make_dir(pat)
 {
-    let dir_for_make=pat+'\\'+get_last_part(pat);
+    let dir_for_make=pat+'\\'+path.basename(pat);
     fs.mkdir(dir_for_make, function(err)
     {
         if(err) console.log("Ошибка при создании директория.");
+        else console.log("Директорий создан.");
     });
+    writefile(pat,dir_for_make);
+
 }
 
-//let content=fs.readFile(`${path}`,"utf8",function(error, data)
-//	{
-  //      console.log(data)
- //   }
-//);
+function writefile(pat, made_dir)
+{
+    fs.readdir(pat, function(err, files)
+    {if(err) console.log("Ошибка при чтении директория.");
+    else
+    {
+        for(let i in files)
+        {
+            let files_or_directories=pat+'\\'+files[i];
+            if(fs.statSync(files_or_directories).isDirectory())
+                writefile(files_or_directories,made_dir);
+            else
+            {
+                if(path.extname(files_or_directories)===".txt")
+                {
+                    fs.readFile(files_or_directories,'utf8' ,(err, data)=>{
+                            if(err)console.log("Ошибка чтения файла.");
+                            else
+                            {
+                                fs.writeFile(made_dir+'\\'+files[i], copyright+'\r\n'+data+'\r\n'+copyright );
+                            }
+                        }
+                    );
+                    }
+            }
+        }
+    }
+    }
+    );
+}
+
+
+function watchDir(dirForTxt) {
+    fs.watch(dirForTxt, (eventType, filename) => {
+        console.log(`event type is: ${eventType}`);
+        if (filename) {
+            console.log(`filename provided: ${filename}`);
+        } else {
+            console.log('filename not provided');
+        }
+    });
+}
